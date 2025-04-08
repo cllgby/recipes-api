@@ -1,6 +1,8 @@
 package main
 
 import (
+	_ "embed"
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -10,12 +12,26 @@ import (
 
 var recipes []Recipe
 
+//go:embed recipes.json
+var recipesData []byte
+
 func init() {
 	recipes = make([]Recipe, 0)
+	// data, err := os.ReadFile("recipes.json")
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	err := json.Unmarshal(recipesData, &recipes)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func main() {
 	router := gin.Default()
+	router.POST("/recipes", NewRecipeHandler)
+	router.GET("/recipes", ListRecipesHandler)
 	router.Run()
 }
 
@@ -41,4 +57,8 @@ func NewRecipeHandler(c *gin.Context) {
 	recipes = append(recipes, recipe)
 
 	c.JSON(http.StatusOK, recipe)
+}
+
+func ListRecipesHandler(c *gin.Context) {
+	c.JSON(http.StatusOK, recipes)
 }
